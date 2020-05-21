@@ -30,4 +30,26 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'ecolab' => [
+        'base_uri' => env('ECOLAB_BASE_URI'),
+        'client_id' => env('ECOLAB_CLIENT_ID'),
+        'client_secret' => env('ECOLAB_CLIENT_SECRET'),
+        'password_client_id' => env('ECOLAB_PASSWORD_CLIENT_ID'),
+        'password_client_secret' => env('ECOLAB_PASSWORD_CLIENT_SECRET'),
+    ],
+
+    'sparkpost' => [
+        'secret' => env('SPARKPOST_SECRET'),
+    ],
+
+    'stripe' => [
+        'model' => App\User::class,
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook' => [
+            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+            'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
+        ],
+    ],
+
 ];

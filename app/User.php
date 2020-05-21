@@ -2,9 +2,9 @@
 
 namespace App;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Services\EcolabService;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
@@ -16,7 +16,11 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'service_id',
+        'grant_type',
+        'access_token',
+        'refresh_token',
+        'token_expires_at',
     ];
 
     /**
@@ -25,7 +29,10 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'remember_token',
+        'access_token',
+        'refresh_token',
+        'token_expires_at',
     ];
 
     /**
@@ -33,7 +40,17 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    protected $casts = [];
+
+    /**
+     * Get the name for the current user
+     * @return string
+     */
+    public function getNameAttribute()
+    {
+        $ecolabService = resolve(EcolabService::class);
+        $userInformation = $ecolabService->getUserInformation();
+
+        return $userInformation->name;
+    }
 }

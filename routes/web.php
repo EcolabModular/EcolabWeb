@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/', 'WelcomeController@showWelcomePage')->name('welcome');
+
 Route::get('/admin', function () {
     return view('bienvenida');
 })->name('panel')->middleware('auth');
