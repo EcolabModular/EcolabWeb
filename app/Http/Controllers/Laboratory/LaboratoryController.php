@@ -2,12 +2,23 @@
 
 namespace App\Http\Controllers\Laboratory;
 
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
-use App\Laboratory;
+use App\Services\EcolabService;
 use App\Http\Controllers\Controller;
 
 class LaboratoryController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct(EcolabService $ecolabService)
+    {
+        parent::__construct($ecolabService);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -15,12 +26,12 @@ class LaboratoryController extends Controller
      */
     public function index()
     {
-        return('Hola Mundo');
-        /*
-        $laboratorios = $this->obtenerLaboratorios();
-        //dd($categorias);
-        return view('Laboratorios.index', compact('laboratorios'));
-        */
+        $laboratories = $this->ecolabService->getAll('laboratories');
+        foreach($laboratories as $laboratorio){
+            $laboratorio->institution_id = $this->ecolabService->getOne('institutions',$laboratorio->institution_id)->name;
+        }
+        //dd($laboratories);
+        return view('Laboratorios.index', compact('laboratories'));
     }
 
     /**
@@ -30,10 +41,12 @@ class LaboratoryController extends Controller
      */
     public function create()
     {
-        return view('Laboratorios.form');
+        $institutions = $this->ecolabService->getAll('institutions');
+        $institutionsArray = Arr::pluck($institutions, 'name','id');
+        return view('Laboratorios.form', compact('institutionsArray'));
     }
 
-    /**
+     /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -41,92 +54,104 @@ class LaboratoryController extends Controller
      */
     public function store(Request $request)
     {
-        // return redirect()->route('laboratories.show', $laboratory);
+        /*$rules = [
+            'name' => 'required|min:5',
+            'description' => 'required|min:10',
+        ];
+        $data = $this->validate($request, $rules);*/
+        $data = $this->ecolabService->create('laboratories', $request, false);
+
+        return redirect()
+            ->route('laboratories.show',
+                [
+                    $data->id,
+                ])
+            ->with('success', ['Created successfully']);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Laboratory  $laboratory
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
-        $laboratorio = $this->obtenerLaboratorio($id);
-        $items = $this->obtenerLaboratorioItems($id);
-        return view('Laboratorios.show', compact('laboratorio','items'));
+        $laboratory = $this->ecolabService->getOne('laboratories',$id);
+        $institution = $this->ecolabService->getOne('institutions',$laboratory->institution_id);
+
+        return view('items.show')->with([
+            'laboratory' => $laboratory,
+            'institution' => $institution,
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Laboratory  $category
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Laboratory $laboratory)
+    public function edit($id)
     {
-        return view('Laboratorios.show', compact('laboratory'));
+        // Validar si es administrador
+        $item = $this->ecolabService->getOne('items',$id);
+        $laboratories = $this->ecolabService->getAll('laboratories');
+        $laboratoriesArray = Arr::pluck($laboratories, 'name','id');
+        return view('Items.form', compact('item', 'laboratoriesArray'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Laboratory  $laboratory
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Laboratory $laboratory)
+    public function update(Request $request, $id)
     {
-        return redirect()->route('laboratories.show', $laboratory);
+        $hasFile = false;
+        $rules = [
+            'name' => 'min:5',
+            'description' => 'min:10',
+            'file' => 'mimes:jpg,png,jpeg,bmp',
+            'laboratory_id' => 'required|integer|min:1',
+        ];
+
+        $data = $this->validate($request, $rules);
+
+        if($request->hasFile('file')){
+            $data['file'] = fopen($request->file->path(), 'r');
+            $hasFile = true;
+        }
+        //dd($data,$hasFile);
+        $item = $this->ecolabService->update("items/{$id}", $data, $hasFile);
+        $laboratory = $this->ecolabService->getOne('laboratories',$item->laboratory_id);
+        $message = 'Updated successfully';
+
+        return view('items.show')->with([
+            'item' => $item,
+            'laboratory' => $laboratory,
+            'success' => $message,
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete the specified resource in storage.
      *
-     * @param  \App\Laboratory  $laboratory
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Laboratory $laboratory)
+    public function destroy($id)
     {
-        //
-    }
-
-    protected function obtenerLaboratorios()
-    {
-        /*
-        $accessToken = 'Bearer ' . $this->obtenerAccessToken();
-
-        $respuesta = $this->realizarPeticion('GET', 'ecolab.test/api/laboratories', [
-                'headers' => ['Authorization' => $accessToken]
+        $this->ecolabService->delete('items',$id);
+        $items = $this->ecolabService->getAll('items');
+        $message = 'Deleted successfully';
+        return view('items.index')
+            ->with([
+                'items' => $items,
+                'success' => $message
             ]);
-        $datos = json_decode($respuesta);
-        $laboratorios = $datos->data;
-        return collect($laboratorios);
-        */
-    }
-
-    protected function obtenerLaboratorio($id)
-    {
-        /*
-        $accessToken = 'Bearer ' . $this->obtenerAccessToken();
-
-        $respuesta = $this->realizarPeticion('GET', 'ecolab.test/api/laboratories' . $id, [
-                'headers' => ['Authorization' => $accessToken]
-            ]);
-        $datos = json_decode($respuesta);
-        return $datos->data;
-        */
-    }
-    protected function obtenerLaboratorioItems($id)
-    {
-        /*
-        $accessToken = 'Bearer ' . $this->obtenerAccessToken();
-
-        $respuesta = $this->realizarPeticion('GET', 'ecolab.test/api/laboratories' . $id . '/items', [
-                'headers' => ['Authorization' => $accessToken]
-            ]);
-        $datos = json_decode($respuesta);
-        return $datos->data;
-        */
     }
 }

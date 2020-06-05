@@ -1,5 +1,5 @@
 @component('mail::message')
-# Hola {{$client->name}}
+# Hola {{$user->name}}
 
 Bienvenido a ECOLAB ya eres parte del equipo.
 ¡Esperamos tu contribución y dedicación con el resto del equipo!

@@ -4,46 +4,49 @@
 @section('ruta_ref') <a href="{{ url('/users') }}">Usuarios</a> @endsection
 @section('contenido')
 
-@if($usuarios->count() == 0)
+@if(!isset($usuarios))
 <div class="alert-warning">
   No Hay Usuarios Registrados
 </div>
 @endif
+
+@if(isset($success))
+<div class="alert alert-success">
+    <button class="close" type="button" data-dismiss="alert" aria-hidden="true">&times;</button>
+    <ul>
+        <li>{{$success}}</li>
+    </ul>
+</div>
+@endif
+
 <div class="table table-bordered table-responsive">
   <div class="tile">
-    <h3 class="tile-title">Usuarios</h3>
-    <a href="{{ route('users.create')}}" class="btn btn-success">Nuevo Usuario</a>
+    <h3 class="tile-title">USUARIOS</h3>
+    <a href="{{ route('users.create')}}" class="btn btn-block btn-primary">NUEVO USUARIO</a>
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>#</th>
+          <th>ID</th>
           <th>NOMBRE</th>
           <th>CORREO</th>
           <th>CÓDIGO</th>
           <th>TELÉFONO</th>
-          <th>TIPO</th>
-          <th>VERIFICADO</th>
-          <th>FOTO</th>
-          <th>CREACIÓN</th>
-          <th>ACTUALIZACIÓN</th>
+          <th>CREADO</th>
+          <th>ACTUALIZADO</th>
         </tr>
       </thead>
       <tbody>
         @foreach($usuarios as $usuario)
-        @php $imgraw = str_replace('?dl=0', '?raw=1', $usuario->urlimg) @endphp
         <tr>
           <td>
-            <a class="btn btn-sm btn-info" href="{{ route('users.show', $usuario->identificador) }}">{{ $usuario->identificador }}</a>
+            <a class="btn btn-sm btn-primary" href="{{ route('users.show', $usuario->id) }}">{{ $usuario->id }}</a>
           </td>
-          <td>{{ $usuario->nombre }}</td>
-          <td>{{ $usuario->correo }}</td>
-          <td>{{ $usuario->codigo }}</td>
-          <td>{{ $usuario->telefono }}</td>
-          <td>{{ $usuario->tipo }}</td>
-          <td>{{ $usuario->esVerificado }}</td>
-          <td> <img class="app-sidebar__user-avatar" src="{{ $imgraw }}" alt="User Image" width="40" height="40"> </td>
-          <td>{{ $usuario->fechaCreacion }}</td>
-          <td>{{ $usuario->fechaActualizacion }}</td>
+          <td>{{ $usuario->name . " " . $usuario->lastname}}</td>
+          <td>{{ $usuario->email }}</td>
+          <td>{{ $usuario->code }}</td>
+          <td>{{ $usuario->phone }}</td>
+          <td>{{ \Carbon\Carbon::parse($usuario->created_at)->format('d/m/Y ')}}</td>
+          <td>{{ \Carbon\Carbon::parse($usuario->updated_at)->format('d/m/Y')}}</td>
         </tr>
         @endforeach
       </tbody>

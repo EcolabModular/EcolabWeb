@@ -22,68 +22,70 @@ class EcolabService
     }
 
     /**
-     * Obtains the list of reports from the API
-     * @return stdClass
-     */
-    public function getReports()
-    {
-        return $this->makeRequest('GET', 'reports');
-    }
-
-    /**
-     * * Obtains a report from the API
+     * * Obtains all records from the API
      * @param  int $id
      * @return stdClass
      */
-    public function getReport($id)
+    public function getAll($url)
     {
-        return $this->makeRequest('GET', "reports/{$id}");
+        return $this->makeRequest('GET', $url);
     }
 
     /**
-     * Make a report on the API
-     * @param  array $reportData
+     * * Obtains a record from the API
+     * @param  int $id
+     * @param  string $url
+     * @return stdClass
+     */
+    public function getOne($url,$id)
+    {
+        return $this->makeRequest('GET', "{$url}/{$id}");
+    }
+
+    /**
+     * Make a record on the API
+     * @param  array $data
      * @return sdtClass
      */
-    public function makeReport($reportData)
+    public function create($url, $data, $hasFile)
     {
         return $this->makeRequest(
             'POST',
-            "reports",
+            $url,
             [],
-            $reportData,
+            $data,
             [],
-            $hasFile = false
+            $hasFile
         );
     }
 
     /**
-     * Update a report on the API
-     * @param  array $reportData
+     * Update a record on the API
+     * @param  array $data
      * @return sdtClass
      */
-    public function updateReport($reportData)
+    public function update($url,$data,$hasFile)
     {
-        $productData['_method'] = 'PUT';
+        $data['_method'] = 'PUT';
 
         return $this->makeRequest(
             'POST',
-            "reports",
+            $url,
             [],
-            $reportData,
+            $data,
             [],
-            $hasFile = false
+            $hasFile
         );
     }
 
     /**
-     * * Delete a report from the API
+     * * Delete a record from the API
      * @param  int $id
      * @return stdClass
      */
-    public function deleteReport($id)
+    public function delete($url,$id)
     {
-        return $this->makeRequest('DELETE', "reports/{$id}");
+        return $this->makeRequest("DELETE", $url."/{$id}");
     }
 
     /**
@@ -92,7 +94,7 @@ class EcolabService
      */
     public function getUserInformation()
     {
-        return $this->makeRequest('GET', "users/me");
+        return $this->makeRequest('GET', "info");
     }
 
 }

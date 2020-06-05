@@ -1,7 +1,8 @@
+{{-- ESTRUCTURA PRINCIPAL DEL TEMA --}}
 @extends('layouts.tema')
 
-@section('titulo_contenido') Bienvenida @endsection
-@section('subtitulo_contenido') Sistema de Gestión de Restaurant @endsection
+@section('titulo_contenido') Bienvenid@ @endsection
+@section('subtitulo_contenido') Sistema de Gestión de Laboratorios @endsection
 
 @section('contenido')
 <div class="row">

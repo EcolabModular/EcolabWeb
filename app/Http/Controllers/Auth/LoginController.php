@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\User;
-//use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Illuminate\Foundation\Auth\ThrottlesLogins;
-use Illuminate\Foundation\Auth\RedirectsUsers;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Services\EcolabService;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use GuzzleHttp\Exception\ClientException;
+use App\Services\EcolabAuthenticationService;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller
 {
@@ -24,103 +25,154 @@ class LoginController extends Controller
     |
     */
 
-    //use AuthenticatesUsers;
-    use ThrottlesLogins,RedirectsUsers;
+    use AuthenticatesUsers;
 
     /**
      * Where to redirect users after login.
      *
      * @var string
      */
-    protected $redirectTo = '/';
+    protected $redirectTo = '/home';
 
-    public function showLoginForm()
-    {
-        return view('auth.login');
-    }
-
-    public function login(Request $request)
-    {
-
-        if ($this->hasTooManyLoginAttempts($request)) {
-            $this->fireLockoutEvent($request);
-
-            return $this->sendLockoutResponse($request);
-        }
-
-        if($request->input('email') == 'prueba@gmail.com' && $request->input('password') == 'secret'){
-            //dd($request);
-            return $this->sendLoginResponse($request);
-        }
-
-        $this->incrementLoginAttempts($request);
-        return $this->sendFailedLoginResponse($request);
-    }
+    /**
+     * The service to perform authentication actions
+     *
+     * @var App\Services\EcolabAuthenticationService
+     */
+    protected $ecolabAuthenticationService;
 
     /**
      * Create a new controller instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(EcolabAuthenticationService $ecolabAuthenticationService, EcolabService $ecolabService)
     {
         $this->middleware('guest')->except('logout');
-    }
 
-    protected function sendLoginResponse(Request $request)
-    {
-        $request->session()->regenerate();
+        $this->ecolabAuthenticationService = $ecolabAuthenticationService;
 
-        $this->clearLoginAttempts($request);
-
-        $user = new User();
-        $user->email = $request->email;
-        //store authenticated and user in session to be checked by authentication middleware
-        $request->session()->put('authenticated',true);
-        $request->session()->put('user', $user);
-
-        //dd($request->session());
-        Auth::guard('web')->login($user);
-        // dd(Auth::guard('web')->user());
-        //dd(Auth::guard('web')->check());
-        return redirect('/panel');
+        parent::__construct($ecolabService);
     }
 
     /**
-     * Get the login username to be used by the controller.
+     * Show the application's login form.
      *
-     * @return string
+     * @return \Illuminate\Http\Response
      */
-    public function username()
+    public function showLoginForm()
     {
-        return 'email';
-    }
-    protected function sendFailedLoginResponse(Request $request)
-    {
-        throw ValidationException::withMessages([
-            $this->username() => [trans('auth.failed')],
-        ]);
+        return view('auth.login');
     }
 
     /**
-     * Get the guard to be used during authentication.
-     *
-     * @return \Illuminate\Contracts\Auth\StatefulGuard
+     * Receives the authorization result from the API
+     * @return \Illuminate\Http\Response
      */
-    protected function guard()
+    public function authorization(Request $request)
     {
-        return Auth::guard();
+        if ($request->has('code')) {
+            $tokenData = $this->ecolabAuthenticationService->getCodeToken($request->code);
+
+            $userData = $this->ecolabService->getUserInformation();
+
+            $user = $this->registerOrUpdateUser($userData, $tokenData);
+
+            $this->loginUser($user);
+
+            return redirect()->intended('home');
+        }
+
+        return redirect()->route('login')->withErrors(['You caneceled the authorization process']);
     }
 
     /**
-     * The user has been authenticated.
+     * Handle a login request to the application.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  mixed  $user
-     * @return mixed
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
-    protected function authenticated(Request $request, $user)
+    public function login(Request $request)
     {
-        //
+        $this->validateLogin($request);
+
+        // If the class is using the ThrottlesLogins trait, we can automatically throttle
+        // the login attempts for this application. We'll key this by the username and
+        // the IP address of the client making these requests into this application.
+        if ($this->hasTooManyLoginAttempts($request)) {
+            $this->fireLockoutEvent($request);
+
+            return $this->sendLockoutResponse($request);
+        }
+
+        try {
+            $tokenData = $this->ecolabAuthenticationService->getPasswordToken($request->email, $request->password);
+
+            $userData = $this->ecolabService->getUserInformation();
+
+            $user = $this->registerOrUpdateUser($userData, $tokenData);
+
+            $this->loginUser($user, $request->has('remember'));
+
+            //dd(Auth::user()->name);
+
+            return redirect()->intended('panel');
+        } catch (ClientException $e) {
+            $message = $e->getResponse()->getBody();
+            if (Str::contains($message, 'invalid_credentials')) {
+                // If the login attempt was unsuccessful we will increment the number of attempts
+                // to login and redirect the user back to the login form. Of course, when this
+                // user surpasses their maximum number of attempts they will get locked out.
+                $this->incrementLoginAttempts($request);
+
+                return $this->sendFailedLoginResponse($request);
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Creates or updates a user from the API
+     * @param  stdClass $userData
+     * @param  stdClass $tokenData
+     * @return App\User
+     */
+    public function registerOrUpdateUser($userData, $tokenData)
+    {
+        //dd($userData);
+        return User::updateOrCreate(
+            [
+                'service_id' => $userData->id,
+            ],
+            [
+                'userCode' => $userData->code,
+                'userGrant' => $userData->userType,
+                'grant_type' => $tokenData->grant_type,
+                'access_token' => $tokenData->access_token,
+                'refresh_token' => $tokenData->refresh_token,
+                'token_expires_at' => $tokenData->token_expires_at,
+            ]
+        );
+    }
+
+    /**
+     * Authenticates a user on the CLient
+     * @param  App\User    $user
+     * @param  boolean $remember
+     * @return void
+     */
+    public function loginUser($user, $remember = true)
+    {
+        Auth::login($user, $remember);
+
+        session()->regenerate();
+    }
+
+    public function logout(Request $request) {
+        $request->session()->invalidate();
+        return redirect('login')->with(Auth::logout());
     }
 }

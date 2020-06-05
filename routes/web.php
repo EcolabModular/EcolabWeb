@@ -13,24 +13,28 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', 'WelcomeController@showWelcomePage')->name('welcome');
+Route::get('authorization', 'Auth\LoginController@authorization')->name('authorization'); //AUTENTICACION CON TERCEROS (NO IMPLEMENTADO AUN)
+//Route::fallback(function(){ return response()->view('errors.404', [], 404); }); // SOLUCION PREVIA A HANDLER, SE MOVIERON MIDDLEWARES WEB A GLOBAL EN KERNEL
 
-Route::get('/admin', function () {
-    return view('bienvenida');
-})->name('panel')->middleware('auth');
+Route::get('/', function () {
+    return redirect('/panel');
+})->middleware('auth');
 
 // Authentication Routes...
 Route::get('login', ['as' => 'login', 'uses' =>'\App\Http\Controllers\Auth\LoginController@showLoginForm']);
 Route::post('login', ['as' => 'login', 'uses' =>'\App\Http\Controllers\Auth\LoginController@login']);
 Route::get('logout', ['as' => 'logout', 'uses' => '\App\Http\Controllers\Auth\LoginController@logout']);
 
-Route::group(['prefix' => 'admin'], function(){
-    Route::resource('items', 'Item\ItemController')->middleware('auth');
-    Route::resource('schedularies', 'Schedulary\SchedularyController')->middleware('auth');
-    Route::resource('laboratories', 'Laboratory\LaboratoryController')->middleware('auth');
-    Route::resource('reports', 'Report\ReportController')->middleware('auth');
-    Route::resource('users', 'User\UserController')->middleware('auth');
-	//Route::resource('categories.dishes', 'Category\CategoryDishController')->middleware('auth');
-	//Route::resource('categories.galleries', 'Category\CategoryGalleryController')->middleware('auth');
+
+Route::group(['prefix' => 'panel','middleware' => 'auth'], function(){
+    Route::get('/', function () {
+        return view('bienvenida');
+    })->name('welcome');
+    Route::resource('items', 'Item\ItemController');
+    Route::resource('schedularies', 'Schedulary\SchedularyController');
+    Route::resource('laboratories', 'Laboratory\LaboratoryController');
+    Route::resource('reports', 'Report\ReportController');
+    Route::resource('users', 'User\UserController');
 
 });
+

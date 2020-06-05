@@ -9,6 +9,7 @@
   <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-calendar"></i><span class="app-menu__label">Items</span><i class="treeview-indicator fa fa-angle-right"></i></a>
     <ul class="treeview-menu">
       <li><a class="treeview-item" href="{{ route('items.index') }}"><i class="icon fa fa-list-ol"></i>Listar Items</a></li>
+      <li><a class="treeview-item" href="{{ route('items.create') }}"><i class="icon fa fa-pencil"></i>Crear Item</a></li>
     </ul>
   </li>
 
