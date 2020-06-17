@@ -1,9 +1,11 @@
 @extends('layouts.tema')
 
 @section('titulo_contenido') Mostrar Item @endsection
-@section('subtitulo_contenido') Item con ID: {{$item->id}} @endsection
-@section('ruta_ref') <a href="{{ url('/admin/items') }}">Items</a> @endsection
-
+@section('subtitulo_contenido') Item registrado en el sistema ECOLAB @endsection
+@section('rutas')
+<li class="breadcrumb-item"><a href="{{ url('/panel/items?per_page=6') }}">Items</a></li>
+<li class="breadcrumb-item"><a href="{{ url("/panel/items/".$item->id ) }}">{{$item->id}}</a></li>
+@endsection
 @section('contenido')
 
 @if(isset($success))
@@ -36,7 +38,8 @@
                          {!! Form::close() !!}
                         </div>
 
-                        <p class="card-footer">Creado: {{ \Carbon\Carbon::parse($item->created_at)->format('d/m/Y')}}<br>Actualizado: {{ \Carbon\Carbon::parse($item->updated_at)->format('d/m/Y')}}</p>
+                        <p class="card-footer">Creado: {{ \Carbon\Carbon::parse($item->created_at)->format('d/m/Y H:m')}}<br>
+                            Actualizado: {{ \Carbon\Carbon::parse($item->updated_at)->format('d/m/Y H:m')}}</p>
                     </div>
                 </div>
             </a>

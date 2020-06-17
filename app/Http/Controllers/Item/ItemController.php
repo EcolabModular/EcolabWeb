@@ -25,11 +25,40 @@ class ItemController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
 
-        $items = $this->ecolabService->getAll('items');
-        return view('Items.index', compact('items'));
+        $response = $this->ecolabService->getAll('items',$request->all());
+
+        $items = $response->data;
+
+        $numOfpages = $response->last_page;
+        $current_page = $response->current_page;
+        $total = $response->total;
+        $from = $response->from;
+        $to = $response->to;
+        $per_page = $response->per_page;
+        $next_page = $current_page+1;
+        $previous_page = $current_page-1;
+
+        $query_str = parse_url($response->first_page_url,PHP_URL_QUERY);
+        parse_str($query_str, $query_params);
+        $query_params['page']="";
+        $page_url = "";
+        $i=1;
+        foreach($query_params as $index => $value){
+            if($i>1){
+                $page_url .= "&" . $index ."=". $value;
+            }else{
+                $page_url .= $index ."=". $value;
+            }
+            $i++;
+        }
+
+        $laboratories = $this->ecolabService->getAll('laboratories',["per_page"=>100])->data;
+        $laboratoriesArray = Arr::pluck($laboratories, 'name','id');
+
+        return view('Items.index', compact('items','laboratoriesArray','numOfpages','current_page','total','from','to','next_page','previous_page','per_page','page_url'));
 
     }
 
@@ -40,7 +69,7 @@ class ItemController extends Controller
      */
     public function create()
     {
-        $laboratories = $this->ecolabService->getAll('laboratories');
+        $laboratories = $this->ecolabService->getAll('laboratories',["per_page"=>100])->data;
         $laboratoriesArray = Arr::pluck($laboratories, 'name','id');
         return view('Items.form', compact('laboratoriesArray'));
     }
@@ -105,7 +134,7 @@ class ItemController extends Controller
     {
         // Validar si es administrador
         $item = $this->ecolabService->getOne('items',$id);
-        $laboratories = $this->ecolabService->getAll('laboratories');
+        $laboratories = $this->ecolabService->getAll('laboratories',["per_page"=>100])->data;
         $laboratoriesArray = Arr::pluck($laboratories, 'name','id');
         return view('Items.form', compact('item', 'laboratoriesArray'));
     }
@@ -155,12 +184,47 @@ class ItemController extends Controller
     public function destroy($id)
     {
         $this->ecolabService->delete('items',$id);
-        $items = $this->ecolabService->getAll('items');
+        $response = $this->ecolabService->getAll('items');
+
+        $items = $response->data;
+
+        $numOfpages = $response->last_page;
+        $current_page = $response->current_page;
+        $total = $response->total;
+        $from = $response->from;
+        $to = $response->to;
+        $per_page = $response->per_page;
+        $next_page = $current_page+1;
+        $previous_page = $current_page-1;
+
+        $query_str = parse_url($response->first_page_url,PHP_URL_QUERY);
+        parse_str($query_str, $query_params);
+        $query_params['page']="";
+        $page_url = "";
+        $i=1;
+        foreach($query_params as $index => $value){
+            if($i>1){
+                $page_url .= "&" . $index ."=". $value;
+            }else{
+                $page_url .= $index ."=". $value;
+            }
+            $i++;
+        }
+
         $message = 'Deleted successfully';
         return view('items.index')
             ->with([
                 'items' => $items,
-                'success' => $message
+                'success' => $message,
+                'numOfpages' => $numOfpages,
+                'current_page' => $current_page,
+                'total' => $total,
+                'from' => $from,
+                'to' => $to,
+                'next_page' => $next_page,
+                'previous_page' => $previous_page,
+                'per_page' => $per_page,
+                'page_url' => $page_url
             ]);
     }
 

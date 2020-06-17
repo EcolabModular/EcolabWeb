@@ -34,7 +34,7 @@ trait ConsumesExternalServices
 
         //dd($multipart);
 
-        //dd($requestUrl,$method);
+        //dd($requestUrl,$method,$queryParams,$formParams,$headers,$hasFile);
 
         $response = $client->request($method, $requestUrl, [
             'query' => $queryParams,
@@ -43,7 +43,6 @@ trait ConsumesExternalServices
         ]);
 
         $response = $response->getBody()->getContents();
-
 
         if (method_exists($this, 'decodeResponse')) {
             $response = $this->decodeResponse($response);

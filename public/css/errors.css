@@ -130,17 +130,23 @@
     box-sizing: border-box;
 }
 body {
-  background-color: #416475;
+  background-color: #416475 !important;
   margin-bottom: 50px;
 }
 html, button, input, select, textarea {
     font-family: 'Montserrat', Helvetica, sans-serif;
     color: #92a4ad;
 }
-h1 {
+.h1-error {
+  color: #8dafce !important;
   text-align: center;
   margin: 30px 15px;
 }
+.h2-error {
+    color: #416475 !important;
+    text-align: center;
+    margin: 30px 15px;
+  }
 .zoom-area {
   max-width: 490px;
   margin: 30px auto 30px;

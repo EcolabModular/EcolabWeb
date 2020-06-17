@@ -26,9 +26,9 @@ class EcolabService
      * @param  int $id
      * @return stdClass
      */
-    public function getAll($url)
+    public function getAll($url,$query = [])
     {
-        return $this->makeRequest('GET', $url);
+        return $this->makeRequest('GET', $url, $query);
     }
 
     /**

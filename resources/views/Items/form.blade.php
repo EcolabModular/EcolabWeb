@@ -14,7 +14,9 @@
         Registrar Item en el Sistema
     @endif
 @endsection
-@section('ruta_ref') <a href="{{ url('/admin/items') }}">Items</a> @endsection
+@section('rutas')
+<li class="breadcrumb-item"><a href="{{ url('/panel/items?per_page=6') }}">Items</a></li>
+@endsection
 
 @section('contenido')
 

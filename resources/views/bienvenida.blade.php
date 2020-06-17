@@ -1,4 +1,3 @@
-{{-- ESTRUCTURA PRINCIPAL DEL TEMA --}}
 @extends('layouts.tema')
 
 @section('titulo_contenido') Bienvenid@ @endsection

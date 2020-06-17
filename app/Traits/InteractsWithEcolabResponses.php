@@ -13,7 +13,8 @@ trait InteractsWithEcolabResponses
     {
         $decodedResponse = json_decode($response);
 
-        return $decodedResponse->data ?? $decodedResponse;
+        return $decodedResponse;
+        //return $decodedResponse->data ?? $decodedResponse;
     }
 
     /**

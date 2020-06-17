@@ -24,14 +24,38 @@ class LaboratoryController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(request $request)
     {
-        $laboratories = $this->ecolabService->getAll('laboratories');
-        foreach($laboratories as $laboratorio){
-            $laboratorio->institution_id = $this->ecolabService->getOne('institutions',$laboratorio->institution_id)->name;
+        $response = $this->ecolabService->getAll('laboratories',$request->all());
+        $laboratories = $response->data;
+
+        $numOfpages = $response->last_page;
+        $current_page = $response->current_page;
+        $total = $response->total;
+        $from = $response->from;
+        $to = $response->to;
+        $per_page = $response->per_page;
+        $next_page = $current_page+1;
+        $previous_page = $current_page-1;
+
+        $query_str = parse_url($response->first_page_url,PHP_URL_QUERY);
+        parse_str($query_str, $query_params);
+        $query_params['page']="";
+        $page_url = "";
+        $i=1;
+        foreach($query_params as $index => $value){
+            if($i>1){
+                $page_url .= "&" . $index ."=". $value;
+            }else{
+                $page_url .= $index ."=". $value;
+            }
+            $i++;
         }
-        //dd($laboratories);
-        return view('Laboratorios.index', compact('laboratories'));
+
+        $institutions = $this->ecolabService->getAll('institutions',["per_page"=>100])->data;
+        $institutionsArray = Arr::pluck($institutions, 'name','id');
+
+        return view('Laboratorios.index', compact('laboratories','institutionsArray','numOfpages','current_page','total','from','to','next_page','previous_page','per_page','page_url'));
     }
 
     /**
@@ -41,7 +65,7 @@ class LaboratoryController extends Controller
      */
     public function create()
     {
-        $institutions = $this->ecolabService->getAll('institutions');
+        $institutions = $this->ecolabService->getAll('institutions',["per_page"=>100]);
         $institutionsArray = Arr::pluck($institutions, 'name','id');
         return view('Laboratorios.form', compact('institutionsArray'));
     }
@@ -54,12 +78,7 @@ class LaboratoryController extends Controller
      */
     public function store(Request $request)
     {
-        /*$rules = [
-            'name' => 'required|min:5',
-            'description' => 'required|min:10',
-        ];
-        $data = $this->validate($request, $rules);*/
-        $data = $this->ecolabService->create('laboratories', $request, false);
+        $data = $this->ecolabService->create('laboratories', $request->all(), false);
 
         return redirect()
             ->route('laboratories.show',
@@ -80,7 +99,8 @@ class LaboratoryController extends Controller
         $laboratory = $this->ecolabService->getOne('laboratories',$id);
         $institution = $this->ecolabService->getOne('institutions',$laboratory->institution_id);
 
-        return view('items.show')->with([
+
+        return view('Laboratorios.show')->with([
             'laboratory' => $laboratory,
             'institution' => $institution,
         ]);
@@ -95,10 +115,13 @@ class LaboratoryController extends Controller
     public function edit($id)
     {
         // Validar si es administrador
-        $item = $this->ecolabService->getOne('items',$id);
-        $laboratories = $this->ecolabService->getAll('laboratories');
-        $laboratoriesArray = Arr::pluck($laboratories, 'name','id');
-        return view('Items.form', compact('item', 'laboratoriesArray'));
+        $laboratory = $this->ecolabService->getOne('laboratories',$id);
+
+
+        $institutions = $this->ecolabService->getAll('institutions',["per_page"=>100])->data;
+        $institutionsArray = Arr::pluck($institutions, 'name','id');
+
+        return view('Laboratorios.form', compact('laboratory', 'institutionsArray'));
     }
 
     /**
@@ -110,28 +133,13 @@ class LaboratoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $hasFile = false;
-        $rules = [
-            'name' => 'min:5',
-            'description' => 'min:10',
-            'file' => 'mimes:jpg,png,jpeg,bmp',
-            'laboratory_id' => 'required|integer|min:1',
-        ];
-
-        $data = $this->validate($request, $rules);
-
-        if($request->hasFile('file')){
-            $data['file'] = fopen($request->file->path(), 'r');
-            $hasFile = true;
-        }
-        //dd($data,$hasFile);
-        $item = $this->ecolabService->update("items/{$id}", $data, $hasFile);
-        $laboratory = $this->ecolabService->getOne('laboratories',$item->laboratory_id);
+        $laboratory = $this->ecolabService->update("laboratories/{$id}", $request->all(), false);
         $message = 'Updated successfully';
+        $institution = $this->ecolabService->getOne('institutions',$laboratory->institution_id);
 
-        return view('items.show')->with([
-            'item' => $item,
+        return view('Laboratorios.show')->with([
             'laboratory' => $laboratory,
+            'institution' => $institution,
             'success' => $message,
         ]);
     }
@@ -145,13 +153,49 @@ class LaboratoryController extends Controller
      */
     public function destroy($id)
     {
-        $this->ecolabService->delete('items',$id);
-        $items = $this->ecolabService->getAll('items');
+        $this->ecolabService->delete('laboratories',$id);
+        $response = $this->ecolabService->getAll('laboratories');
+        $laboratories = $response->data;
+
+        $numOfpages = $response->last_page;
+        $current_page = $response->current_page;
+        $total = $response->total;
+        $from = $response->from;
+        $to = $response->to;
+        $per_page = $response->per_page;
+        $next_page = $current_page+1;
+        $previous_page = $current_page-1;
+
+        $query_str = parse_url($response->first_page_url,PHP_URL_QUERY);
+        parse_str($query_str, $query_params);
+        $query_params['page']="";
+        $page_url = "";
+        $i=1;
+        foreach($query_params as $index => $value){
+            if($i>1){
+                $page_url .= "&" . $index ."=". $value;
+            }else{
+                $page_url .= $index ."=". $value;
+            }
+            $i++;
+        }
+
+
         $message = 'Deleted successfully';
-        return view('items.index')
+
+        return view('Laboratorios.index')
             ->with([
-                'items' => $items,
-                'success' => $message
+                'laboratories' => $laboratories,
+                'success' => $message,
+                'numOfpages' => $numOfpages,
+                'current_page' => $current_page,
+                'total' => $total,
+                'from' => $from,
+                'to' => $to,
+                'next_page' => $next_page,
+                'previous_page' => $previous_page,
+                'per_page' => $per_page,
+                'page_url' => $page_url
             ]);
     }
 }

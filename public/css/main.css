@@ -50,6 +50,36 @@
           box-sizing: border-box;
 }
 
+/*
+* ESTILOS PROPIOS
+*/
+.glyphicon {
+    position: relative;
+    top: 1px;
+    left: 7px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+span {
+    float: right;
+}
+
+th > span {
+    float: right;
+}
+
+.pull.right{
+    float:right;
+  }
+
+/**FIN ESTILOS PROPIOS**/
+
 html {
   font-family: sans-serif;
   line-height: 1.15;

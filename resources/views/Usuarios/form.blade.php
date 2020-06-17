@@ -1,7 +1,9 @@
 @extends('layouts.tema')
-@section('titulo_contenido') Titulo del contenido @endsection
-@section('subtitulo_contenido') Subtitulo del contenido @endsection
-@section('ruta_ref') <a href="{{ url('/users') }}">Usuarios</a> @endsection
+@section('titulo_contenido') Rellene los campos para usuarios @endsection
+@section('subtitulo_contenido') Formulario para registro de usuarios @endsection
+@section('rutas')
+<li class="breadcrumb-item"><a href="{{ url('/panel/users') }}">Usuarios</a></li>
+@endsection
 
 @section('contenido')
 <div class="row">

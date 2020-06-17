@@ -14,7 +14,9 @@
         Registrar Laboratorio en el Sistema
     @endif
 @endsection
-@section('ruta_ref') <a href="{{ url('/admin/laboratories') }}">Laboratorios</a> @endsection
+@section('rutas')
+<li class="breadcrumb-item"><a href="{{ url('/panel/laboratories') }}">Laboratorios</a></li>
+@endsection
 
 @section('contenido')
 
@@ -26,7 +28,7 @@
       <div class="tile-body">
 
         @if(isset($laboratory))
-          {!! Form::model($laboratory, ['route' => ['items.update', $laboratory->id], 'method' => 'PUT']) !!}
+          {!! Form::model($laboratory, ['route' => ['laboratories.update', $laboratory->id], 'method' => 'PUT']) !!}
         @else
           {!! Form::open(['action' => 'Laboratory\LaboratoryController@store', 'method' => 'POST']) !!}
         @endif

@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Throwable;
+use BadMethodCallException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -82,7 +83,6 @@ class Handler extends ExceptionHandler
                     ]);
         }
         else if($exception instanceof ViewException){
-            dd($request->has('email'));
             if($exception->getPrevious()->getCode() == 500){
                 return response()->view('errors.FatalError', [], 500);
             }
@@ -90,13 +90,12 @@ class Handler extends ExceptionHandler
             return response()->view('errors.FatalError', [], 500);
         }
         /* SOLUCIONADO ERROR 404 CON ROUTE:FALLBACK EN web.php
-        * LA SESION SE VOLVIA NULL CUANDO HABIA ERROR 404
+        * LA SESION SE VOLVIA NULL CUANDO HABIA ERROR 404*/
         else if($exception instanceof NotFoundHttpException){
-            //dd($request);
-            //return redirect()->back()->withErrors(['message' => 'Error404',]);
-            //return response()->view('errors.404', [], 404);
-            //Route::fallback(function(){ return response()->view('errors.404', [], 404); });
-        }*/
+            return response()->view('errors.404', ['message' => 'The server can not find the requested resource.'], 404);
+        }else if($exception instanceof BadMethodCallException){
+            return response()->view('errors.404', ['message' => 'The server can not find the requested resource.'], 404);
+        }
         return parent::render($request, $exception);
     }
 
@@ -188,13 +187,16 @@ class Handler extends ExceptionHandler
             break;
 
             case Response::HTTP_NOT_FOUND:
+                $message = 'The server can not find the requested resource.';
+                return response()->view('errors.404',compact('onlyErrors','message'));
+                /*
                 return redirect()
                     ->back()
                     ->withErrors([
                         'message' => 'The server can not find the requested resource.',
                         'code' => $code,
                         'messageResponse' => $onlyErrors
-                    ]);
+                    ]);*/
             break;
 
             case Response::HTTP_UNPROCESSABLE_ENTITY:
@@ -205,6 +207,16 @@ class Handler extends ExceptionHandler
                         'code' => $code,
                         'messageResponse' => $onlyErrors
                     ]);
+            break;
+
+            case Response::HTTP_CONFLICT:
+                return redirect()
+                ->back()
+                ->withErrors([
+                    'message' => 'A request conflicts with the current state.',
+                    'code' => $code,
+                    'messageResponse' => $onlyErrors
+                ]);
             break;
 
 

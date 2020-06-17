@@ -1,5 +1,5 @@
 <link rel="stylesheet" type="text/css" href="{{ asset('css/fatalerror.css') }}" >
-<link rel="stylesheet" type="text/css" href="{{ asset('js/fatalerror.js') }}" >
+<script type="text/javascript" src="{{ asset('js/fatalerror.js') }}"></script>
 
 <div class="container">
     <div class="error">

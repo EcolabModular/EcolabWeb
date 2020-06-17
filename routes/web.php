@@ -25,16 +25,29 @@ Route::get('login', ['as' => 'login', 'uses' =>'\App\Http\Controllers\Auth\Login
 Route::post('login', ['as' => 'login', 'uses' =>'\App\Http\Controllers\Auth\LoginController@login']);
 Route::get('logout', ['as' => 'logout', 'uses' => '\App\Http\Controllers\Auth\LoginController@logout']);
 
-
 Route::group(['prefix' => 'panel','middleware' => 'auth'], function(){
     Route::get('/', function () {
         return view('bienvenida');
     })->name('welcome');
+
+    Route::get('/estadisticas', function () {
+        return view('estadisticas.indexPredictivo');
+    })->name('predictivo');
+
+    Route::get('/calendarios', function () {
+        return view('Calendarios.index');
+    })->name('calendarios');
+
+    Route::resource('itemschedularies','Schedulary\ItemSchedularyApiController');
+    Route::resource('itemsapi','Item\ItemApiController');
+
+    Route::resource('schedularies','Schedulary\SchedularyController');
     Route::resource('items', 'Item\ItemController');
-    Route::resource('schedularies', 'Schedulary\SchedularyController');
     Route::resource('laboratories', 'Laboratory\LaboratoryController');
     Route::resource('reports', 'Report\ReportController');
     Route::resource('users', 'User\UserController');
+    Route::resource('notes', 'Note\NoteController');
+    Route::resource('institutions', 'Institution\InstitutionController');
 
 });
 

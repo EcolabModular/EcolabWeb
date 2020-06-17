@@ -21,10 +21,35 @@ class UserController extends Controller
     }
 
 
-    public function index()
+    public function index(Request $request)
     {
-        $usuarios = $this->ecolabService->getAll('users');
-        return view('Usuarios.index', compact('usuarios'));
+        $response = $this->ecolabService->getAll('users',$request->all());
+        $usuarios = $response->data;
+
+        $numOfpages = $response->last_page;
+        $current_page = $response->current_page;
+        $total = $response->total;
+        $from = $response->from;
+        $to = $response->to;
+        $per_page = $response->per_page;
+        $next_page = $current_page+1;
+        $previous_page = $current_page-1;
+
+        $query_str = parse_url($response->first_page_url,PHP_URL_QUERY);
+        parse_str($query_str, $query_params);
+        $query_params['page']="";
+        $page_url = "";
+        $i=1;
+        foreach($query_params as $index => $value){
+            if($i>1){
+                $page_url .= "&" . $index ."=". $value;
+            }else{
+                $page_url .= $index ."=". $value;
+            }
+            $i++;
+        }
+
+        return view('Usuarios.index', compact('usuarios','numOfpages','current_page','total','from','to','next_page','previous_page','per_page','page_url'));
 
     }
 
@@ -35,7 +60,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $institutions = $this->ecolabService->getAll('institutions');
+        $institutions = $this->ecolabService->getAll('institutions',["per_page"=>100])->data;
         $institutionsArray = Arr::pluck($institutions, 'name','id');
 
         $userTypeArray = [
@@ -49,9 +74,9 @@ class UserController extends Controller
     public function show($id)
     {
         $usuario = $this->ecolabService->getOne('users',$id);
+
         $userType = $this->ecolabService->getOne('dictionaries',$usuario->userType);
         $institution = $this->ecolabService->getOne('institutions',$usuario->institution_id);
-
         return view('Usuarios.show')->with([
             'user' => $usuario,
             'userType' => $userType,
@@ -90,7 +115,7 @@ class UserController extends Controller
     public function edit($id)
     {
         $user = $this->ecolabService->getOne('users',$id);
-        $institutions = $this->ecolabService->getAll('institutions');
+        $institutions = $this->ecolabService->getAll('institutions',["per_page"=>100])->data;
         $institutionsArray = Arr::pluck($institutions, 'name','id');
 
         $userTypeArray = [
@@ -113,11 +138,15 @@ class UserController extends Controller
         //dd($data,$hasFile);
         $data = $request->all();
         $user = $this->ecolabService->update("users/{$id}", $data, false);
+        $userType = $this->ecolabService->getOne('dictionaries',$user->userType);
+        $institution = $this->ecolabService->getOne('institutions',$user->institution_id);
         $message = 'Updated successfully';
 
         return view('Usuarios.show')->with([
             'user' => $user,
             'success' => $message,
+            'userType' => $userType,
+            'institution' => $institution
         ]);
     }
 
@@ -131,12 +160,47 @@ class UserController extends Controller
     public function destroy($id)
     {
         $this->ecolabService->delete('users',$id);
-        $usuarios = $this->ecolabService->getAll('users');
+        $response = $this->ecolabService->getAll('users');
+        $usuarios = $response->data;
+
+        $numOfpages = $response->last_page;
+        $current_page = $response->current_page;
+        $total = $response->total;
+        $from = $response->from;
+        $to = $response->to;
+        $per_page = $response->per_page;
+        $next_page = $current_page+1;
+        $previous_page = $current_page-1;
+
+        $query_str = parse_url($response->first_page_url,PHP_URL_QUERY);
+        parse_str($query_str, $query_params);
+        $query_params['page']="";
+        $page_url = "";
+        $i=1;
+        foreach($query_params as $index => $value){
+            if($i>1){
+                $page_url .= "&" . $index ."=". $value;
+            }else{
+                $page_url .= $index ."=". $value;
+            }
+            $i++;
+        }
+
         $message = 'Deleted successfully';
+
         return view('Usuarios.index')
             ->with([
                 'usuarios' => $usuarios,
-                'success' => $message
+                'success' => $message,
+                'numOfpages' => $numOfpages,
+                'current_page' => $current_page,
+                'total' => $total,
+                'from' => $from,
+                'to' => $to,
+                'next_page' => $next_page,
+                'previous_page' => $previous_page,
+                'per_page' => $per_page,
+                'page_url' => $page_url
             ]);
     }
 }

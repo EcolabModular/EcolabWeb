@@ -1,7 +1,10 @@
 @extends('layouts.tema')
 @section('titulo_contenido') Usuario Registrado @endsection
 @section('subtitulo_contenido') Usuario Registrado en el Sistema ECOLAB @endsection
-@section('ruta_ref') <a href="{{ url('/users') }}">Usuarios</a> @endsection
+@section('rutas')
+<li class="breadcrumb-item"><a href="{{ url('/panel/users') }}">Usuarios</a></li>
+<li class="breadcrumb-item"><a href="{{ url("/panel/users/".$user->id ) }}">{{$user->id}}</a></li>
+@endsection
 
 @section('contenido')
 
@@ -35,7 +38,7 @@
                         </div>
                         <br>
                         <br>
-                        <p class="card-footer">Creado: {{ \Carbon\Carbon::parse($user->created_at)->format('d/m/Y')}}<br>Actualizado: {{ \Carbon\Carbon::parse($user->updated_at)->format('d/m/Y')}}</p>
+                        <p class="card-footer">Creado: {{ \Carbon\Carbon::parse($user->created_at)->format('d/m/Y H:m')}}<br>Actualizado: {{ \Carbon\Carbon::parse($user->updated_at)->format('d/m/Y H:m')}}</p>
                     </div>
                 </div>
             </a>
@@ -64,16 +67,17 @@
         <div class="table table-responsive">
           <table class="table table-hover">
             <thead>
-              <th>NOMBRE</th>
-              <th>CORREO</th>
-              <th>CODIGO</th>
-
+                <th>NOMBRE</th>
+                <th>CORREO</th>
+                <th>CODIGO</th>
+                <th>SEXO</th>
             </thead>
             <tbody>
               <tr>
                 <td>{{ $user->name }}</td>
                 <td>{{ $user->email }}</td>
                 <td>{{ $user->code }}</td>
+                <td>{{ $user->gender }}</td>
               </tr>
             </tbody>
           </table>
